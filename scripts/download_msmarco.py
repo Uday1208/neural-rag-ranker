@@ -87,8 +87,13 @@ def download_msmarco_preview(config_path: str) -> None:
             hf_name,
             hf_config,
             split=train_split,
-            streaming=True,
+            #streaming=True, # Non-streaming load: download the parquet once, then slice in-memory.
         )
+
+        # Added for non-streaming mode
+        # Limit to the desired preview size.
+        num_to_take = min(preview_num, len(hf_ds))
+        hf_ds = hf_ds.select(range(num_to_take))
     
         written = 0
         with preview_path.open("w", encoding="utf-8") as output_file:
