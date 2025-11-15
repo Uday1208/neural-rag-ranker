@@ -20,6 +20,8 @@ from datasets import Dataset as HFDataset
 from datasets import load_dataset
 from torch.utils.data import Dataset
 
+from src.utils.timing import time_block  # <-- new import
+
 logger = logging.getLogger(__name__)
 
 
