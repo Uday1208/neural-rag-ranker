@@ -1,0 +1,17 @@
+# config/data_msmarco.yaml
+# Configuration specific to MS MARCO Passage Ranking (microsoft/ms_marco v1.1).
+
+data:
+  msmarco:
+    hf_dataset_name: "microsoft/ms_marco"
+    hf_config_name: "v1.1"
+    train_split: "train"
+    eval_split: "validation"
+    # For early experiments, use a smaller subset; set to null for full dataset.
+    max_train_samples: 50000     # e.g., 50k for quick experiments
+    max_eval_samples: 10000      # e.g., 10k for quick eval/debug
+    output_dir: "./data/msmarco"
+
+    # Preview settings used by download_msmarco.py
+    preview_num_examples: 1000
+    preview_file: "preview_train.jsonl"
