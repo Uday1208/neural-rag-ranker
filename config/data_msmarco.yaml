@@ -20,3 +20,8 @@ data:
     # For now we test with 20k examples.
     preview_num_examples: 20000
     preview_file: "preview_train_20k.jsonl"
+
+eval:
+  msmarco_bm25:
+    top_k: 10          # how many docs to retrieve per query
+    metrics_k: [1, 3, 5, 10]
