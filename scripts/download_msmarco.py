@@ -17,6 +17,7 @@ from typing import Any, Dict
 from datasets import load_dataset
 
 from src.utils.config import load_config
+from src.utils.timing import time_block  # <-- new import
 
 
 def parse_args() -> argparse.Namespace:
@@ -68,38 +69,39 @@ def download_msmarco_preview(config_path: str) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     preview_path = output_dir / preview_filename
 
-    print(
-        f"[download_msmarco] Loading dataset {hf_name!r} (config={hf_config!r}, "
-        f"split={train_split!r}) in streaming mode..."
-    )
-
-    # Streaming mode is memory-friendly for large datasets.
-    dataset_iter = load_dataset(
-        hf_name,
-        hf_config,
-        split=train_split,
-        streaming=True,
-    )
-
-    written = 0
-    with preview_path.open("w", encoding="utf-8") as output_file:
-        for example in dataset_iter:
-            # We keep the preview simple and focused on relevant fields.
-            row = {
-                "query_id": example.get("query_id"),
-                "query": example.get("query"),
-                "passages": example.get("passages"),
-            }
-            json_line = json.dumps(row, ensure_ascii=False)
-            output_file.write(json_line + "\n")
-
-            written += 1
-            if written >= preview_num:
-                break
-
-    print(
-        f"[download_msmarco] Wrote {written} examples to {preview_path.as_posix()}"
-    )
+    with time_block("MS MARCO preview download+write"):
+        print(
+            f"[download_msmarco] Loading dataset {hf_name!r} (config={hf_config!r}, "
+            f"split={train_split!r}) in streaming mode..."
+        )
+    
+        # Streaming mode is memory-friendly for large datasets.
+        dataset_iter = load_dataset(
+            hf_name,
+            hf_config,
+            split=train_split,
+            streaming=True,
+        )
+    
+        written = 0
+        with preview_path.open("w", encoding="utf-8") as output_file:
+            for example in dataset_iter:
+                # We keep the preview simple and focused on relevant fields.
+                row = {
+                    "query_id": example.get("query_id"),
+                    "query": example.get("query"),
+                    "passages": example.get("passages"),
+                }
+                json_line = json.dumps(row, ensure_ascii=False)
+                output_file.write(json_line + "\n")
+    
+                written += 1
+                if written >= preview_num:
+                    break
+    
+        print(
+            f"[download_msmarco] Wrote {written} examples to {preview_path.as_posix()}"
+        )
 
 
 def main() -> None:
