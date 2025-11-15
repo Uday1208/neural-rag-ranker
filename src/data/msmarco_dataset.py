@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import random
+import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -100,32 +101,50 @@ class MSMarcoTripletDataset(Dataset):
         self._hf_dataset_name = hf_dataset_name
         self._hf_config_name = hf_config_name
 
-        logger.info(
-            "Loading MS MARCO dataset '%s' (config='%s', split='%s')",
-            hf_dataset_name,
-            hf_config_name,
-            split,
-        )
-
-        hf_ds: HFDataset = load_dataset(
-            hf_dataset_name,
-            hf_config_name,
-            split=split,
-            cache_dir=cache_dir,
-        )
-
-        if max_samples is not None:
-            max_samples = min(max_samples, len(hf_ds))
-            hf_ds = hf_ds.select(range(max_samples))
+        with time_block(f"load+filter MS MARCO split='{split}'"):
             logger.info(
-                "Selected first %d samples from split '%s'", max_samples, split
+                "Loading MS MARCO dataset '%s' (config='%s', split='%s')",
+                hf_dataset_name,
+                hf_config_name,
+                split,
+            )
+    
+            start_len = time.perf_counter()
+    
+            hf_ds: HFDataset = load_dataset(
+                hf_dataset_name,
+                hf_config_name,
+                split=split,
+                cache_dir=cache_dir,
+            )
+    
+            if max_samples is not None:
+                max_samples = min(max_samples, len(hf_ds))
+                hf_ds = hf_ds.select(range(max_samples))
+                logger.info(
+                    "Selected first %d samples from split '%s'", max_samples, split
+                )
+    
+            mid_len = time.perf_counter()
+            logger.info(
+                "Finished raw load for split '%s' in %.2f seconds",
+                split,
+                mid_len - start_len,
+            )
+    
+            logger.info("Filtering examples without both positive and negative passages")
+    
+            # The filter function must be picklable; defining it at module level satisfies this.
+            hf_ds = hf_ds.filter(_has_positive_and_negative)
+    
+            end_len = time.perf_counter()
+            logger.info(
+                "Finished filtering for split '%s' in %.2f seconds",
+                split,
+                end_len - mid_len,
             )
 
-        logger.info("Filtering examples without both positive and negative passages")
-
-        # The filter function must be picklable; defining it at module level satisfies this.
-        hf_ds = hf_ds.filter(_has_positive_and_negative)
-
+        
         if len(hf_ds) == 0:
             raise ValueError(
                 "No valid MS MARCO examples left after filtering for positives and "
