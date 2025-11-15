@@ -69,7 +69,11 @@ def download_msmarco_preview(config_path: str) -> None:
     hf_config: str = msmarco_cfg["hf_config_name"]
     train_split: str = msmarco_cfg["train_split"]
 
-    preview_num: int = int(msmarco_cfg.get("preview_num_examples", 1000))
+    #preview_num: int = int(msmarco_cfg.get("preview_num_examples", 1000))
+    # Prefer a dedicated preview_num_examples; else fall back to max_train_samples; else 1000.
+    max_train = int(msmarco_cfg.get("max_train_samples", 1000))
+    preview_num = int(msmarco_cfg.get("preview_num_examples", max_train))
+    
     output_dir = Path(msmarco_cfg.get("output_dir", "./data/msmarco"))
     preview_filename: str = msmarco_cfg.get("preview_file", "preview_train.jsonl")
 
@@ -79,11 +83,15 @@ def download_msmarco_preview(config_path: str) -> None:
     with time_block("MS MARCO preview download+write"):
         print(
             f"[download_msmarco] Loading dataset {hf_name!r} (config={hf_config!r}, "
-            f"split={train_split!r}) in streaming mode..."
+            #f"split={train_split!r}) in streaming mode..."
+            f"split={train_split!r}) in non-streaming mode..."
         )
+
+
     
         # Streaming mode is memory-friendly for large datasets.
-        dataset_iter = load_dataset(
+        #dataset_iter = load_dataset(
+        hf_ds = load_dataset(
             hf_name,
             hf_config,
             split=train_split,
@@ -97,7 +105,8 @@ def download_msmarco_preview(config_path: str) -> None:
     
         written = 0
         with preview_path.open("w", encoding="utf-8") as output_file:
-            for example in dataset_iter:
+            #for example in dataset_iter:
+            for example in hf_ds:
                 # We keep the preview simple and focused on relevant fields.
                 row = {
                     "query_id": example.get("query_id"),

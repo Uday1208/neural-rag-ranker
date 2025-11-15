@@ -13,5 +13,10 @@ data:
     output_dir: "./data/msmarco"
 
     # Preview settings used by download_msmarco.py
-    preview_num_examples: 1000
-    preview_file: "preview_train.jsonl"
+    #preview_num_examples: 1000
+    #preview_file: "preview_train.jsonl"
+    # Preview settings used only by scripts/download_msmarco.py
+    
+    # For now we test with 20k examples.
+    preview_num_examples: 20000
+    preview_file: "preview_train_20k.jsonl"
