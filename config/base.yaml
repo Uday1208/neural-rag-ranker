@@ -1,0 +1,20 @@
+# config/base.yaml
+# Global defaults shared across training, evaluation, and services.
+
+experiment:
+  name: "neural-rag-ranker"
+  seed: 42
+
+paths:
+  project_root: "."
+  data_dir: "./data"
+  checkpoints_dir: "./checkpoints"
+  logs_dir: "./logs"
+
+device:
+  use_cuda_if_available: true
+
+logging:
+  log_level: "INFO"
+  log_to_file: true
+  log_file_name: "neural_rag_ranker.log"
