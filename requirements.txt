@@ -1,4 +1,6 @@
 torch
+transformers
 datasets
 pyyaml
 rank-bm25
+tqdm
